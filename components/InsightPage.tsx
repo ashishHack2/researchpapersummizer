@@ -10,18 +10,21 @@ interface InsightPageProps {
   onUpdateDoc: (doc: ResearchDocument) => void;
 }
 
+
 const InsightPage: React.FC<InsightPageProps> = ({ documents, selectedDocId, onSelectDoc, onUpdateDoc }) => {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const selectedDoc = documents.find(d => d.id === selectedDocId);
 
   const handleExtract = async () => {
     if (!selectedDoc) return;
     setLoading(true);
+    setError(null);
     try {
       const insights = await extractInsights(selectedDoc.content);
       onUpdateDoc({ ...selectedDoc, insights });
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setError("Insights extraction failed: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -37,9 +40,8 @@ const InsightPage: React.FC<InsightPageProps> = ({ documents, selectedDocId, onS
             <button
               key={doc.id}
               onClick={() => onSelectDoc(doc.id)}
-              className={`w-full text-left p-3 rounded-lg text-sm transition-all ${
-                selectedDocId === doc.id ? 'bg-slate-800 text-white' : 'hover:bg-slate-100 text-slate-600'
-              }`}
+              className={`w-full text-left p-3 rounded-lg text-sm transition-all ${selectedDocId === doc.id ? 'bg-slate-800 text-white' : 'hover:bg-slate-100 text-slate-600'
+                }`}
             >
               <div className="truncate">{doc.name}</div>
             </button>
@@ -59,7 +61,7 @@ const InsightPage: React.FC<InsightPageProps> = ({ documents, selectedDocId, onS
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-black text-slate-900 tracking-tight">Technical Insights</h2>
               {!selectedDoc.insights && (
-                <button 
+                <button
                   onClick={handleExtract}
                   disabled={loading}
                   className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-xl font-bold shadow-lg shadow-purple-200 transition-all flex items-center space-x-2"
@@ -69,6 +71,13 @@ const InsightPage: React.FC<InsightPageProps> = ({ documents, selectedDocId, onS
                 </button>
               )}
             </div>
+
+            {error && (
+              <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-100 flex items-center space-x-2">
+                <i className="fa-solid fa-circle-exclamation"></i>
+                <span>{error}</span>
+              </div>
+            )}
 
             {selectedDoc.insights ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -83,7 +92,7 @@ const InsightPage: React.FC<InsightPageProps> = ({ documents, selectedDocId, onS
                   <ul className="space-y-4">
                     {selectedDoc.insights.objectives.map((obj, i) => (
                       <li key={i} className="flex items-start space-x-3 group">
-                        <span className="text-blue-500 font-bold mt-1 text-sm">{i+1}.</span>
+                        <span className="text-blue-500 font-bold mt-1 text-sm">{i + 1}.</span>
                         <p className="text-slate-600 text-sm leading-relaxed group-hover:text-slate-900 transition-colors">{obj}</p>
                       </li>
                     ))}

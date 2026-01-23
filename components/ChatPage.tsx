@@ -142,16 +142,12 @@ const ChatPage: React.FC<ChatPageProps> = ({ documents, selectedDocId, onSelectD
                 4. Be concise and accurate.
             `;
 
-            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            const response = await fetch("http://localhost:8000/api/chat/", {
                 method: "POST",
                 headers: {
-                    "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                    "HTTP-Referer": "http://localhost:1000",
-                    "X-Title": "Research Insight Hub",
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    "model": "google/gemini-2.0-flash-001",
                     "messages": [
                         { "role": "user", "content": prompt }
                     ]
@@ -159,12 +155,12 @@ const ChatPage: React.FC<ChatPageProps> = ({ documents, selectedDocId, onSelectD
             });
 
             if (!response.ok) {
-                const errorData = await response.text();
-                throw new Error(`OpenRouter API Error: ${response.status} - ${errorData}`);
+                const errorData = await response.json().catch(() => ({ error: response.statusText }));
+                throw new Error(errorData.error || `Server Error: ${response.status}`);
             }
 
             const data = await response.json();
-            const text = data.choices[0]?.message?.content || "No response generated.";
+            const text = data.response || "No response generated.";
 
             const aiMsg: Message = {
                 id: (Date.now() + 1).toString(),

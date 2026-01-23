@@ -24,9 +24,9 @@ const SearchPage: React.FC<SearchPageProps> = ({ documents }) => {
     try {
       const response = await search(query);
       setAiResponse(response.answer);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setAiResponse("Failed to fetch search results. Please ensure the backend is running.");
+      setAiResponse(`Failed to fetch search results: ${err.message || "Please ensure the backend is running."}`);
     } finally {
       setIsSearching(false);
     }

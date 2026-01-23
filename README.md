@@ -1,61 +1,104 @@
-# AI Research Insight Hub - Production Guide
+# AI Research Insight Hub
 
-A high-performance platform for PDF text extraction, AI-powered summarization, and semantic search.
+A powerful, full-stack application for managing, summarizing, and querying research papers using advanced AI. This project combines a modern React frontend with a robust Django backend to provide PDF text extraction, AI-powered summarization, technical insight extraction, and semantic search.
 
-## 🚀 Quick Start (Frontend)
+## ✨ Features
 
-1. **Environment**: This project is designed as a modern React SPA using ES modules.
-2. **API Key**: Ensure `process.env.API_KEY` is configured with your Google Gemini API key.
-3. **Run**:
-   - For local development, serve the root directory using a static server or Vite.
-   - The app uses `localStorage` for persistence and PDF.js for client-side parsing.
-
-## ⚙️ Backend Setup (Django + FAISS)
-
-For production-scale document management and vector search, a Django backend is required.
-
-### Prerequisites
-- Python 3.10+
-- `pip install django djangorestframework django-cors-headers google-generativeai faiss-cpu pypdf`
-
-### Local Setup
-1. **Initialize Django**:
-   ```bash
-   django-admin startproject research_backend
-   cd research_backend
-   python manage.py startapp api
-   ```
-2. **Configuration**: Add `rest_framework`, `corsheaders`, and `api` to `INSTALLED_APPS` in `settings.py`.
-3. **Logic**: Use the provided `backend_logic.py` for your `api/views.py`.
-4. **Environment**: Create a `.env` file with `GEMINI_API_KEY=your_key_here`.
-5. **Run**: `python manage.py runserver`
-
-## 🧠 AI Architecture
-
-### 1. Summarization & Insights
-Uses **Gemini 3 Flash** with structured JSON output (Response Schema) to ensure:
-- Zero hallucinations.
-- Consistent academic tone.
-- Clear separation of Methodology, Findings, and Limitations.
-
-### 2. Semantic Search (RAG)
-- **Embedding**: Generates vectors using Gemini for query and document chunks.
-- **Vector DB**: FAISS (Facebook AI Similarity Search) stores these vectors for low-latency retrieval.
-- **Synthesis**: The top-K retrieved chunks are fed back to Gemini to generate a grounded, natural language answer.
-
-## 📁 Project Structure
-- `index.html`: Entry point & Map imports.
-- `index.tsx`: React mounting logic.
-- `App.tsx`: View routing and global state.
-- `services/`: AI and PDF processing logic.
-- `components/`: Modular UI components.
-- `types.ts`: Global TypeScript interfaces.
-- `backend_logic.py`: Reference Django backend implementation.
-
-## 🛡️ Security & Performance
-- **Client-side PDF Parsing**: Reduces server load and improves privacy.
-- **Chunking**: Large documents are split (1000-word windows) to fit context limits.
-- **Graceful Error Handling**: Robust UI feedback for API failures or corrupted files.
+- **PDF Parsing**: Client-side parsing for speed and privacy.
+- **AI Summarization**: Generates structured summaries (Abstract, Findings, Methodology, Limitations).
+- **Technical Insights**: Extracts deep technical concepts, objectives, and conclusions.
+- **Semantic Search**: Ask natural language questions across your document library.
+- **Chat with AI**: Context-aware Q&A with your documents, supporting multiple languages.
+- **Voice Interaction**: Native Speech-to-Text and Text-to-Speech capabilities for hands-free research.
+- **Responsive Design**: Beautiful, modern UI built with Tailwind CSS.
 
 ---
 *Created by Ashish *
+
+## 🛠️ Prerequisites
+
+Before running the project, ensure you have the following installed:
+- **Node.js** (v18 or higher)
+- **Python** (v3.10 or higher)
+- **Git**
+
+You will also need an **OpenRouter API Key** (Get one from [OpenRouter](https://openrouter.ai/)).
+
+---
+
+## 🚀 Local Development Guide
+
+Follow these steps to run the application locally on your machine.
+
+### 1. Setup the Backend (Django)
+
+The backend handles AI processing and API requests.
+
+1.  **Navigate to the project root**:
+    ```bash
+    cd researchpaper_demo
+    ```
+
+2.  **Create a virtual environment** (recommended):
+    ```bash
+    python -m venv venv
+    
+    # Windows
+    .\venv\Scripts\activate
+    
+    # Mac/Linux
+    source venv/bin/activate
+    ```
+
+3.  **Install Python dependencies**:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+4.  **Configure Environment Variables**:
+    - Create a `.env` file in the root directory (if it doesn't exist).
+    - Add your OpenRouter API key:
+      ```env
+      OPENROUTER_API_KEY=your_actual_api_key_here
+      ```
+
+5.  **Run Database Migrations**:
+    ```bash
+    python research_backend/manage.py migrate
+    ```
+
+6.  **Start the Backend Server**:
+    ```bash
+    python research_backend/manage.py runserver
+    ```
+    The backend will start at `http://127.0.0.1:8000/`.
+
+### 2. Setup the Frontend (React + Vite)
+
+The frontend provides the user interface.
+
+1.  **Open a new terminal window** (keep the backend running).
+
+2.  **Navigate to the project root**:
+    ```bash
+    cd researchpaper_demo
+    ```
+
+3.  **Install Node dependencies**:
+    ```bash
+    npm install
+    ```
+
+4.  **Start the Development Server**:
+    ```bash
+    npm run dev
+    ```
+
+5.  **Access the Application**:
+    Open your browser and go to the URL shown in the terminal (usually `http://localhost:1000/`).
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
