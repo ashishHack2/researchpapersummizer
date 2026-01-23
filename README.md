@@ -58,4 +58,4 @@ Uses **Gemini 3 Flash** with structured JSON output (Response Schema) to ensure:
 - **Graceful Error Handling**: Robust UI feedback for API failures or corrupted files.
 
 ---
-*Created by Senior AI Architect*
+*Created by Ashish *

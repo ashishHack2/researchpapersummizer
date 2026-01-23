@@ -2,6 +2,20 @@ import { DocumentSummary, DocumentInsights } from "../types";
 
 const API_BASE_URL = 'http://localhost:8000/api';
 
+const handleResponse = async (response: Response) => {
+  if (!response.ok) {
+    let errorMessage = 'An error occurred';
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error || response.statusText;
+    } catch (e) {
+      errorMessage = response.statusText;
+    }
+    throw new Error(errorMessage);
+  }
+  return response.json();
+};
+
 export const generateSummary = async (text: string): Promise<DocumentSummary> => {
   const response = await fetch(`${API_BASE_URL}/summarize/`, {
     method: 'POST',
@@ -10,12 +24,7 @@ export const generateSummary = async (text: string): Promise<DocumentSummary> =>
     },
     body: JSON.stringify({ text }),
   });
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch summary from backend');
-  }
-
-  return response.json();
+  return handleResponse(response);
 };
 
 export const extractInsights = async (text: string): Promise<DocumentInsights> => {
@@ -26,12 +35,7 @@ export const extractInsights = async (text: string): Promise<DocumentInsights> =
     },
     body: JSON.stringify({ text }),
   });
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch insights from backend');
-  }
-
-  return response.json();
+  return handleResponse(response);
 };
 
 export const getEmbeddings = async (text: string): Promise<number[]> => {
@@ -50,11 +54,7 @@ export const search = async (query: string): Promise<{ answer: string }> => {
     body: JSON.stringify({ query }),
   });
 
-  if (!response.ok) {
-    throw new Error('Failed to perform search');
-  }
-
-  return response.json();
+  return handleResponse(response);
 }
 
 export const refineSearchResults = async (query: string, results: string[]): Promise<string> => {
