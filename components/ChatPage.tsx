@@ -142,7 +142,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ documents, selectedDocId, onSelectD
                 4. Be concise and accurate.
             `;
 
-            const response = await fetch("http://localhost:8000/api/chat/", {
+            const response = await fetch("https://researchpapersummizer-backend.onrender.com/api/chat/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
