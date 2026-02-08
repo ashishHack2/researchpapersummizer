@@ -6,7 +6,9 @@ import { ResearchDocument } from '../types';
 
 interface ResearchReadinessProps {
     document: ResearchDocument | null;
+    documents: ResearchDocument[];
     onBack: () => void;
+    onSelectDoc: (id: string) => void;
 }
 
 interface ReadinessScore {
@@ -22,7 +24,7 @@ interface ReadinessScore {
     final_verdict: string;
 }
 
-const ResearchReadiness: React.FC<ResearchReadinessProps> = ({ document, onBack }) => {
+const ResearchReadiness: React.FC<ResearchReadinessProps> = ({ document, documents, onBack, onSelectDoc }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [result, setResult] = useState<ReadinessScore | null>(null);
@@ -38,8 +40,10 @@ const ResearchReadiness: React.FC<ResearchReadinessProps> = ({ document, onBack 
         setResult(null);
 
         try {
-            const response = await axios.post('http://127.0.0.1:8000/api/research-readiness/', {
+            const response = await axios.post('https://researchpapersummizer-backend.onrender.com/api/research-readiness/', {
                 text: document.content
+            }, {
+                timeout: 60000 // 60 second timeout for backend wake-up
             });
 
             setResult(response.data);
@@ -48,7 +52,7 @@ const ResearchReadiness: React.FC<ResearchReadinessProps> = ({ document, onBack 
             setError(
                 err.response?.data?.message ||
                 err.message ||
-                'Failed to evaluate research readiness. Please ensure the backend server is running.'
+                'Failed to evaluate research readiness. The backend may be waking up (first request can take 30-60 seconds).'
             );
         } finally {
             setIsLoading(false);
@@ -71,20 +75,41 @@ const ResearchReadiness: React.FC<ResearchReadinessProps> = ({ document, onBack 
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-4 flex-1">
                         <button
                             onClick={onBack}
                             className="p-3 rounded-xl bg-white dark:bg-slate-800 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 text-slate-700 dark:text-slate-300"
                         >
                             <i className="fa-solid fa-arrow-left"></i>
                         </button>
-                        <div>
+                        <div className="flex-1">
                             <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
                                 AI Research Readiness Evaluation
                             </h1>
-                            <p className="text-slate-600 dark:text-slate-400 mt-1">
-                                {document?.title || 'No document selected'}
-                            </p>
+                            {/* Document Selector */}
+                            {documents.length > 0 ? (
+                                <div className="mt-3">
+                                    <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">
+                                        Select Paper to Evaluate
+                                    </label>
+                                    <select
+                                        value={document?.id || ''}
+                                        onChange={(e) => onSelectDoc(e.target.value)}
+                                        className="w-full max-w-md px-4 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    >
+                                        <option value="">-- Select a paper --</option>
+                                        {documents.map((doc) => (
+                                            <option key={doc.id} value={doc.id}>
+                                                {doc.title}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            ) : (
+                                <p className="text-slate-600 dark:text-slate-400 mt-1">
+                                    No documents available. Please upload a paper first.
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>

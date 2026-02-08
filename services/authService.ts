@@ -71,13 +71,28 @@ export const authService = {
     // Sign in with Google
     signInWithGoogle: async () => {
         try {
+            // Configure Google Provider with additional settings
+            googleProvider.setCustomParameters({
+                prompt: 'select_account'
+            });
+
+            console.log('Attempting Google sign-in...');
             const result = await signInWithPopup(auth, googleProvider);
+            console.log('Google sign-in successful:', result.user.email);
+
             return {
                 success: true,
                 user: result.user,
                 message: 'Signed in with Google successfully!'
             };
         } catch (error: any) {
+            console.error('Google sign-in error details:', {
+                code: error.code,
+                message: error.message,
+                email: error.customData?.email,
+                credential: error.credential
+            });
+
             return {
                 success: false,
                 error: error.code,
@@ -152,7 +167,24 @@ const getErrorMessage = (errorCode: string): string => {
             return 'Network error. Please check your connection.';
         case 'auth/popup-closed-by-user':
             return 'Sign-in popup was closed. Please try again.';
+        case 'auth/popup-blocked':
+            return 'Sign-in popup was blocked by your browser. Please allow popups for this site.';
+        case 'auth/cancelled-popup-request':
+            return 'Sign-in was cancelled. Please try again.';
+        case 'auth/unauthorized-domain':
+            return 'This domain is not authorized for Google sign-in. Please contact support.';
+        case 'auth/operation-not-allowed':
+            return 'Google sign-in is not enabled. Please contact support.';
+        case 'auth/account-exists-with-different-credential':
+            return 'An account already exists with the same email but different sign-in credentials.';
+        case 'auth/invalid-credential':
+            return 'The credential is invalid or has expired. Please try again.';
+        case 'auth/operation-not-supported-in-this-environment':
+            return 'This operation is not supported in this environment. Make sure you are using HTTPS.';
+        case 'auth/timeout':
+            return 'The operation timed out. Please try again.';
         default:
+            console.error('Unhandled error code:', errorCode);
             return 'An error occurred. Please try again.';
     }
 };

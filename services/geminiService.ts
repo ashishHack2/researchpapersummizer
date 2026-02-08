@@ -2,6 +2,29 @@ import { DocumentSummary, DocumentInsights } from "../types";
 
 const API_BASE_URL = 'https://researchpapersummizer-backend.onrender.com/api';
 
+// Enhanced fetch with timeout and better error handling
+const fetchWithTimeout = async (url: string, options: RequestInit & { timeout?: number } = {}) => {
+  const { timeout = 60000, ...fetchOptions } = options;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(url, {
+      ...fetchOptions,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('Request timed out. The backend may be waking up (free tier can take 30-60 seconds for first request).');
+    }
+    throw error;
+  }
+};
+
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
     let errorMessage = 'An error occurred';
@@ -17,23 +40,25 @@ const handleResponse = async (response: Response) => {
 };
 
 export const generateSummary = async (text: string): Promise<DocumentSummary> => {
-  const response = await fetch(`${API_BASE_URL}/summarize/`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/summarize/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ text }),
+    timeout: 60000, // 60 seconds for wake-up
   });
   return handleResponse(response);
 };
 
 export const extractInsights = async (text: string): Promise<DocumentInsights> => {
-  const response = await fetch(`${API_BASE_URL}/insights/`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/insights/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ text }),
+    timeout: 60000, // 60 seconds for wake-up
   });
   return handleResponse(response);
 };
@@ -46,12 +71,13 @@ export const getEmbeddings = async (text: string): Promise<number[]> => {
 };
 
 export const search = async (query: string): Promise<{ answer: string }> => {
-  const response = await fetch(`${API_BASE_URL}/search/`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/search/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ query }),
+    timeout: 60000, // 60 seconds for wake-up
   });
 
   return handleResponse(response);

@@ -218,6 +218,8 @@ const AppContent: React.FC = () => {
           {currentView === AppView.RESEARCH_READINESS && (
             <ResearchReadiness
               document={selectedDocument}
+              documents={documents}
+              onSelectDoc={setSelectedDocId}
               onBack={() => setCurrentView(AppView.DASHBOARD)}
             />
           )}
