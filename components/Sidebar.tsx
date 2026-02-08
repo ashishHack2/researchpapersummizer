@@ -17,18 +17,19 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, isOpen = tru
     { id: AppView.INSIGHTS, icon: 'fa-lightbulb', label: 'Insights' },
     { id: AppView.SEARCH, icon: 'fa-magnifying-glass', label: 'Semantic Search' },
     { id: AppView.CHAT, icon: 'fa-comments', label: 'Chat with AI' },
+    { id: AppView.RESEARCH_READINESS, icon: 'fa-flask', label: 'Research Readiness' },
   ];
 
   return (
     <>
       {/* Mobile Overlay */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-slate-900/50 z-40 md:hidden backdrop-blur-sm"
           onClick={onClose}
         />
       )}
-      
+
       {/* Sidebar */}
       <div className={`
         fixed md:relative inset-y-0 left-0 z-50
@@ -44,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, isOpen = tru
             <span className="text-lg font-bold tracking-tight">InsightHub</span>
           </div>
           {/* Close button for mobile */}
-          <button 
+          <button
             onClick={onClose}
             className="md:hidden text-slate-400 hover:text-white"
           >
@@ -63,8 +64,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, isOpen = tru
                 }
               }}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentView === item.id
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                 }`}
             >
               <i className={`fa-solid ${item.icon} w-5`}></i>

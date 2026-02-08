@@ -10,11 +10,16 @@ import SearchPage from './components/SearchPage';
 import ChatPage from './components/ChatPage';
 import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
+import ResearchReadiness from './components/ResearchReadiness';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import authService from './services/authService';
+import { User as FirebaseUser } from 'firebase/auth';
 
 interface User {
+  uid: string;
   username: string;
   email: string;
+  photoURL?: string | null;
 }
 
 const AppContent: React.FC = () => {
@@ -24,21 +29,36 @@ const AppContent: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [showLogin, setShowLogin] = useState(false);
 
-  // Check for existing session on mount
+  // Listen to Firebase auth state changes
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
+    const unsubscribe = authService.onAuthStateChange((firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        // User is logged in
+        const userData: User = {
+          uid: firebaseUser.uid,
+          username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+          email: firebaseUser.email || '',
+          photoURL: firebaseUser.photoURL
+        };
+        setUser(userData);
         setIsAuthenticated(true);
-      } catch (e) {
-        console.error("Failed to parse user session", e);
+        setShowLogin(false);
+      } else {
+        // User is logged out
+        setUser(null);
+        setIsAuthenticated(false);
       }
-    }
+      setIsAuthLoading(false);
+    });
+
+    // Cleanup subscription
+    return () => unsubscribe();
   }, []);
 
-  // Load from local storage on mount
+  // Load documents from local storage
   useEffect(() => {
     const saved = localStorage.getItem('research_docs');
     if (saved) {
@@ -50,7 +70,7 @@ const AppContent: React.FC = () => {
     }
   }, []);
 
-  // Save to local storage on change
+  // Save documents to local storage
   useEffect(() => {
     localStorage.setItem('research_docs', JSON.stringify(documents));
   }, [documents]);
@@ -69,31 +89,63 @@ const AppContent: React.FC = () => {
     setDocuments(prev => prev.map(d => d.id === updatedDoc.id ? updatedDoc : d));
   };
 
-  const handleLogin = (username: string, email: string) => {
-    const newUser = { username, email };
-    setUser(newUser);
+  const handleLogin = (firebaseUser: FirebaseUser) => {
+    const userData: User = {
+      uid: firebaseUser.uid,
+      username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+      email: firebaseUser.email || '',
+      photoURL: firebaseUser.photoURL
+    };
+    setUser(userData);
     setIsAuthenticated(true);
-    localStorage.setItem('user', JSON.stringify(newUser));
+    setShowLogin(false);
+    setCurrentView(AppView.DASHBOARD);
+  };
+
+  const handleLogout = async () => {
+    await authService.logout();
+    setUser(null);
+    setIsAuthenticated(false);
     setCurrentView(AppView.LANDING);
   };
 
-  const handleLogout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('user');
-    setCurrentView(AppView.LANDING);
+  const handleGetStarted = () => {
+    if (isAuthenticated) {
+      setCurrentView(AppView.DASHBOARD);
+    } else {
+      setShowLogin(true);
+    }
   };
 
   const selectedDocument = documents.find(d => d.id === selectedDocId) || null;
 
-  // Show login page if not authenticated
-  if (!isAuthenticated) {
+  // Show loading while checking auth state
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <div className="text-center">
+          <i className="fa-solid fa-spinner fa-spin text-4xl text-blue-600 dark:text-blue-400 mb-4"></i>
+          <p className="text-slate-600 dark:text-slate-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login page if user clicks "Get Started" and not authenticated
+  if (showLogin && !isAuthenticated) {
     return <LoginPage onLogin={handleLogin} />;
   }
 
-  if (currentView === AppView.LANDING) {
-    return <LandingPage onStart={() => setCurrentView(AppView.DASHBOARD)} />;
+  // Show landing page if not authenticated and haven't clicked "Get Started"
+  if (!isAuthenticated && currentView === AppView.LANDING) {
+    return <LandingPage onStart={handleGetStarted} />;
   }
+
+  // Show landing page if authenticated and on landing view
+  if (currentView === AppView.LANDING) {
+    return <LandingPage onStart={handleGetStarted} />;
+  }
+
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden transition-colors duration-300">
@@ -160,6 +212,13 @@ const AppContent: React.FC = () => {
               selectedDocId={selectedDocId}
               onSelectDoc={setSelectedDocId}
               onUpdateDoc={updateDocument}
+            />
+          )}
+
+          {currentView === AppView.RESEARCH_READINESS && (
+            <ResearchReadiness
+              document={selectedDocument}
+              onBack={() => setCurrentView(AppView.DASHBOARD)}
             />
           )}
         </div>

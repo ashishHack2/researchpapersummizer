@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
+import authService from '../services/authService';
 
 interface LoginPageProps {
-    onLogin: (username: string, email: string) => void;
+    onLogin: (user: any) => void;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
@@ -10,13 +11,62 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
     const [isSignup, setIsSignup] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
     const { theme, toggleTheme } = useTheme();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (email && password) {
-            const displayName = isSignup && username ? username : email.split('@')[0];
-            onLogin(displayName, email);
+        setError('');
+        setSuccessMessage('');
+        setIsLoading(true);
+
+        try {
+            if (isSignup) {
+                // Sign up with email/password
+                const result = await authService.signUp(email, password, username);
+                if (result.success && result.user) {
+                    setSuccessMessage(result.message);
+                    // Automatically log in after signup
+                    onLogin(result.user);
+                } else {
+                    setError(result.message);
+                }
+            } else {
+                // Sign in with email/password
+                const result = await authService.signIn(email, password);
+                if (result.success && result.user) {
+                    onLogin(result.user);
+                } else {
+                    setError(result.message);
+                }
+            }
+        } catch (err: any) {
+            setError('An unexpected error occurred. Please try again.');
+            console.error('Auth error:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleGoogleSignIn = async () => {
+        setError('');
+        setSuccessMessage('');
+        setIsLoading(true);
+
+        try {
+            const result = await authService.signInWithGoogle();
+            if (result.success && result.user) {
+                onLogin(result.user);
+            } else {
+                setError(result.message);
+            }
+        } catch (err: any) {
+            setError('Failed to sign in with Google. Please try again.');
+            console.error('Google sign-in error:', err);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -57,6 +107,20 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                         </p>
                     </div>
 
+                    {/* Error/Success Messages */}
+                    {error && (
+                        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
+                            <i className="fa-solid fa-circle-exclamation mr-2"></i>
+                            {error}
+                        </div>
+                    )}
+                    {successMessage && (
+                        <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-400 text-sm">
+                            <i className="fa-solid fa-circle-check mr-2"></i>
+                            {successMessage}
+                        </div>
+                    )}
+
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="space-y-5">
                         {isSignup && (
@@ -74,6 +138,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                                         onChange={(e) => setUsername(e.target.value)}
                                         className="w-full pl-10 pr-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
                                         placeholder="Enter your username"
+                                        disabled={isLoading}
                                     />
                                 </div>
                             </div>
@@ -94,6 +159,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                                     className="w-full pl-10 pr-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
                                     placeholder="Enter your email"
                                     required
+                                    disabled={isLoading}
                                 />
                             </div>
                         </div>
@@ -113,6 +179,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                                     className="w-full pl-10 pr-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
                                     placeholder="Enter your password"
                                     required
+                                    disabled={isLoading}
                                 />
                             </div>
                         </div>
@@ -123,6 +190,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                                     <input
                                         type="checkbox"
                                         className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 cursor-pointer"
+                                        disabled={isLoading}
                                     />
                                     <span className="text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
                                         Remember me
@@ -136,9 +204,17 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
                         <button
                             type="submit"
-                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 hover:from-blue-700 hover:to-purple-700"
+                            disabled={isLoading}
+                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                         >
-                            {isSignup ? 'Sign Up' : 'Sign In'}
+                            {isLoading ? (
+                                <span className="flex items-center justify-center">
+                                    <i className="fa-solid fa-spinner fa-spin mr-2"></i>
+                                    {isSignup ? 'Creating Account...' : 'Signing In...'}
+                                </span>
+                            ) : (
+                                isSignup ? 'Sign Up' : 'Sign In'
+                            )}
                         </button>
                     </form>
 
@@ -155,14 +231,16 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                             </div>
                         </div>
 
-                        <div className="mt-6 grid grid-cols-2 gap-3">
-                            <button className="flex items-center justify-center px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-300 group">
+                        <div className="mt-6">
+                            <button
+                                onClick={handleGoogleSignIn}
+                                disabled={isLoading}
+                                className="w-full flex items-center justify-center px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-300 group disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
                                 <i className="fa-brands fa-google text-xl text-slate-600 dark:text-slate-400 group-hover:text-red-500 transition-colors"></i>
-                                <span className="ml-2 text-sm font-medium text-slate-700 dark:text-slate-300">Google</span>
-                            </button>
-                            <button className="flex items-center justify-center px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-300 group">
-                                <i className="fa-brands fa-github text-xl text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors"></i>
-                                <span className="ml-2 text-sm font-medium text-slate-700 dark:text-slate-300">GitHub</span>
+                                <span className="ml-3 text-sm font-medium text-slate-700 dark:text-slate-300">
+                                    {isLoading ? 'Connecting...' : 'Sign in with Google'}
+                                </span>
                             </button>
                         </div>
                     </div>
@@ -173,8 +251,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                             {isSignup ? 'Already have an account?' : "Don't have an account?"}
                             <button
                                 type="button"
-                                onClick={() => setIsSignup(!isSignup)}
-                                className="ml-2 text-blue-600 dark:text-blue-400 font-semibold hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                                onClick={() => {
+                                    setIsSignup(!isSignup);
+                                    setError('');
+                                    setSuccessMessage('');
+                                }}
+                                disabled={isLoading}
+                                className="ml-2 text-blue-600 dark:text-blue-400 font-semibold hover:text-blue-700 dark:hover:text-blue-300 transition-colors disabled:opacity-50"
                             >
                                 {isSignup ? 'Sign In' : 'Sign Up'}
                             </button>

@@ -1,4 +1,5 @@
 
+
 export enum AppView {
   DASHBOARD = 'DASHBOARD',
   UPLOAD = 'UPLOAD',
@@ -6,7 +7,8 @@ export enum AppView {
   INSIGHTS = 'INSIGHTS',
   SEARCH = 'SEARCH',
   CHAT = 'CHAT',
-  LANDING = 'LANDING'
+  LANDING = 'LANDING',
+  RESEARCH_READINESS = 'RESEARCH_READINESS'
 }
 
 export interface ResearchDocument {
