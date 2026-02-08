@@ -95,13 +95,16 @@ const ResearchReadiness: React.FC<ResearchReadinessProps> = ({ document, documen
                                     </label>
                                     <select
                                         value={document?.id || ''}
-                                        onChange={(e) => onSelectDoc(e.target.value)}
+                                        onChange={(e) => {
+                                            console.log('Selected document ID:', e.target.value);
+                                            onSelectDoc(e.target.value);
+                                        }}
                                         className="w-full max-w-md px-4 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                     >
                                         <option value="">-- Select a paper --</option>
                                         {documents.map((doc) => (
                                             <option key={doc.id} value={doc.id}>
-                                                {doc.title}
+                                                {doc.name}
                                             </option>
                                         ))}
                                     </select>
@@ -125,12 +128,12 @@ const ResearchReadiness: React.FC<ResearchReadinessProps> = ({ document, documen
                                 </div>
                                 <div>
                                     <h3 className="text-lg font-bold text-slate-900 dark:text-white">Selected Paper</h3>
-                                    <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-1">{document.title}</p>
+                                    <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-1">{document.name}</p>
                                 </div>
                             </div>
                             {result && (
                                 <button
-                                    onClick={() => exportReadinessToPDF(document.title, result)}
+                                    onClick={() => exportReadinessToPDF(document.name, result)}
                                     className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center space-x-2"
                                     title="Download as PDF"
                                 >
