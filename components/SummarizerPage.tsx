@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { ResearchDocument, DocumentSummary } from '../types';
 import { generateSummary } from '../services/geminiService';
+import { exportSummaryToPDF } from '../utils/pdfExport';
 
 interface SummarizerPageProps {
   documents: ResearchDocument[];
@@ -47,11 +48,10 @@ const SummarizerPage: React.FC<SummarizerPageProps> = ({ documents, selectedDocI
             <button
               key={doc.id}
               onClick={() => onSelectDoc(doc.id)}
-              className={`w-full text-left p-4 rounded-xl border transition-all ${
-                selectedDocId === doc.id 
-                  ? 'border-blue-500 bg-blue-50 shadow-sm' 
+              className={`w-full text-left p-4 rounded-xl border transition-all ${selectedDocId === doc.id
+                  ? 'border-blue-500 bg-blue-50 shadow-sm'
                   : 'border-slate-200 hover:border-slate-300 bg-white'
-              }`}
+                }`}
             >
               <div className="flex items-center space-x-3">
                 <i className={`fa-solid fa-file-pdf ${selectedDocId === doc.id ? 'text-blue-600' : 'text-slate-400'}`}></i>
@@ -83,13 +83,23 @@ const SummarizerPage: React.FC<SummarizerPageProps> = ({ documents, selectedDocI
               </div>
               <div className="flex items-center space-x-3">
                 {selectedDoc.summary ? (
-                  <button 
-                    onClick={copyToClipboard}
-                    className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                    title="Copy to clipboard"
-                  >
-                    <i className="fa-solid fa-copy"></i>
-                  </button>
+                  <>
+                    <button
+                      onClick={copyToClipboard}
+                      className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Copy to clipboard"
+                    >
+                      <i className="fa-solid fa-copy"></i>
+                    </button>
+                    <button
+                      onClick={() => exportSummaryToPDF(selectedDoc.name, selectedDoc.summary!)}
+                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center space-x-2"
+                      title="Download as PDF"
+                    >
+                      <i className="fa-solid fa-file-pdf"></i>
+                      <span>Download PDF</span>
+                    </button>
+                  </>
                 ) : (
                   <button
                     onClick={handleGenerate}

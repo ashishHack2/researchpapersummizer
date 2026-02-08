@@ -3,6 +3,7 @@ import axios from 'axios';
 import ScoreCard from './ScoreCard';
 import VerdictBadge from './VerdictBadge';
 import { ResearchDocument } from '../types';
+import { exportReadinessToPDF } from '../utils/pdfExport';
 
 interface ResearchReadinessProps {
     document: ResearchDocument | null;
@@ -113,6 +114,33 @@ const ResearchReadiness: React.FC<ResearchReadinessProps> = ({ document, documen
                         </div>
                     </div>
                 </div>
+
+                {/* Selected Paper Info */}
+                {document && (
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg border border-slate-200 dark:border-slate-700 mb-8">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+                                    <i className="fa-solid fa-file-pdf text-white text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Selected Paper</h3>
+                                    <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-1">{document.title}</p>
+                                </div>
+                            </div>
+                            {result && (
+                                <button
+                                    onClick={() => exportReadinessToPDF(document.title, result)}
+                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center space-x-2"
+                                    title="Download as PDF"
+                                >
+                                    <i className="fa-solid fa-file-pdf"></i>
+                                    <span>Download PDF</span>
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* Evaluate Button */}
                 {!result && !isLoading && (

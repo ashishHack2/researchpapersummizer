@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { ResearchDocument, DocumentInsights } from '../types';
 import { extractInsights } from '../services/geminiService';
+import { exportInsightsToPDF } from '../utils/pdfExport';
 
 interface InsightPageProps {
   documents: ResearchDocument[];
@@ -60,16 +61,28 @@ const InsightPage: React.FC<InsightPageProps> = ({ documents, selectedDocId, onS
           <div className="space-y-6 animate-fadeIn pb-12">
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-black text-slate-900 tracking-tight">Technical Insights</h2>
-              {!selectedDoc.insights && (
-                <button
-                  onClick={handleExtract}
-                  disabled={loading}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-xl font-bold shadow-lg shadow-purple-200 transition-all flex items-center space-x-2"
-                >
-                  {loading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-brain"></i>}
-                  <span>{loading ? 'Mining Data...' : 'Extract Deep Insights'}</span>
-                </button>
-              )}
+              <div className="flex items-center space-x-3">
+                {selectedDoc.insights && (
+                  <button
+                    onClick={() => exportInsightsToPDF(selectedDoc.name, selectedDoc.insights!)}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center space-x-2"
+                    title="Download as PDF"
+                  >
+                    <i className="fa-solid fa-file-pdf"></i>
+                    <span>Download PDF</span>
+                  </button>
+                )}
+                {!selectedDoc.insights && (
+                  <button
+                    onClick={handleExtract}
+                    disabled={loading}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-xl font-bold shadow-lg shadow-purple-200 transition-all flex items-center space-x-2"
+                  >
+                    {loading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-brain"></i>}
+                    <span>{loading ? 'Mining Data...' : 'Extract Deep Insights'}</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             {error && (
