@@ -55,19 +55,22 @@ const ResearchReadiness: React.FC<ResearchReadinessProps> = ({ document, documen
                 throw new Error('Empty response from backend');
             }
 
-            // Check for required fields
-            const requiredFields = ['novelty_score', 'technical_depth_score', 'experimental_rigor_score',
-                'literature_coverage_score', 'publication_readiness_score',
-                'strengths', 'weaknesses', 'suggestions', 'suitable_venues', 'final_verdict'];
+            // Add default values for any missing fields
+            const processedResult: ReadinessScore = {
+                novelty_score: response.data.novelty_score || 0,
+                technical_depth_score: response.data.technical_depth_score || 0,
+                experimental_rigor_score: response.data.experimental_rigor_score || 0,
+                literature_coverage_score: response.data.literature_coverage_score || 0,
+                publication_readiness_score: response.data.publication_readiness_score || 0,
+                strengths: response.data.strengths || [],
+                weaknesses: response.data.weaknesses || [],
+                suggestions: response.data.suggestions || [],
+                suitable_venues: response.data.suitable_venues || ['Not specified'],
+                final_verdict: response.data.final_verdict || 'Evaluation Incomplete'
+            };
 
-            const missingFields = requiredFields.filter(field => response.data[field] === undefined);
-            if (missingFields.length > 0) {
-                console.error('Missing fields in backend response:', missingFields);
-                throw new Error(`Backend response missing fields: ${missingFields.join(', ')}`);
-            }
-
-            setResult(response.data);
-            console.log('Results set successfully');
+            setResult(processedResult);
+            console.log('Results set successfully with defaults:', processedResult);
         } catch (err: any) {
             console.error('Research readiness evaluation error:', err);
             console.error('Error details:', {
